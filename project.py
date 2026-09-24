@@ -1,161 +1,196 @@
-
+# Pet Food Collection Game
+ 
+# Import necessary libraries
 import pygame
 import random
  
-
+# Constants for easy adjustments
+SCREEN_WIDTH, SCREEN_HEIGHT = 500, 400
+MOVEMENT_SPEED = 5
+FONT_SIZE = 60
+ 
+# Initialize Pygame
 pygame.init()
  
-
-CAR_COLOR_CHANGE_EVENT = pygame.USEREVENT + 1
-SIGNAL_CHANGE_EVENT = pygame.USEREVENT + 2
+# Load and scale the background image
+background_image = pygame.transform.scale(
+    pygame.image.load("pet_bg.jpg"),
+    (SCREEN_WIDTH, SCREEN_HEIGHT)
+)
  
-
-ROAD = pygame.Color("darkgray")
-WHITE = pygame.Color("white")
-YELLOW = pygame.Color("yellow")
-BLUE = pygame.Color("blue")
-ORANGE = pygame.Color("orange")
- 
-RED = pygame.Color("red")
-GREEN = pygame.Color("green")
+# Load a named system font
+font = pygame.font.SysFont(
+    "Arial",
+    FONT_SIZE
+)
  
  
-
-class Car(pygame.sprite.Sprite):
+# Create a sprite class
+class Sprite(pygame.sprite.Sprite):
  
-
     def __init__(self, color, width, height):
-        
+        # Call the parent Sprite constructor
         super().__init__()
  
-        
-        self.image = pygame.Surface([width, height])
+        # Give the sprite an image
+        self.image = pygame.Surface(
+            [width, height]
+        )
         self.image.fill(color)
  
-       
+        # Give the sprite a rectangular position
         self.rect = self.image.get_rect()
  
-      
-        self.velocity = [3, 0]
+    # Move the sprite while keeping it inside the screen
+    def move(self, x_change, y_change):
+        self.rect.x = max(
+            min(
+                self.rect.x + x_change,
+                SCREEN_WIDTH - self.rect.width
+            ),
+            0
+        )
  
-   
-    def update(self):
-    
-        self.rect.move_ip(self.velocity)
- 
-        sensor_triggered = False
- 
-    
-        if self.rect.left <= 0 or self.rect.right >= 600:
-      
-            self.velocity[0] = -self.velocity[0]
- 
-            sensor_triggered = True
- 
-       
-        if sensor_triggered:
-            pygame.event.post(
-                pygame.event.Event(CAR_COLOR_CHANGE_EVENT)
-            )
- 
-            pygame.event.post(
-                pygame.event.Event(SIGNAL_CHANGE_EVENT)
-            )
- 
-  
-    def change_color(self):
-        self.image.fill(
-            random.choice([WHITE, YELLOW, BLUE, ORANGE])
+        self.rect.y = max(
+            min(
+                self.rect.y + y_change,
+                SCREEN_HEIGHT - self.rect.height
+            ),
+            0
         )
  
  
-
-def change_signal():
-    global signal_color
+# Create the game window
+screen = pygame.display.set_mode(
+    (SCREEN_WIDTH, SCREEN_HEIGHT)
+)
  
-  
-    if signal_color == RED:
-        signal_color = GREEN
-    else:
-        signal_color = RED
+pygame.display.set_caption(
+    "Pet Food Collection Game"
+)
  
- 
-
+# Create a group for all sprites
 all_sprites = pygame.sprite.Group()
  
-
-car = Car(WHITE, 70, 35)
+# Create the pet sprite
+pet = Sprite(
+    pygame.Color("brown"),
+    40,
+    40
+)
  
-
-car.rect.x = 50
-car.rect.y = 300
+pet.rect.x = 30
+pet.rect.y = 180
  
-
-all_sprites.add(car)
+all_sprites.add(pet)
  
-screen = pygame.display.set_mode((600, 400))
-pygame.display.set_caption("Smart Traffic Signal Simulator")
+# Create the pet-food sprite
+pet_food = Sprite(
+    pygame.Color("orange"),
+    30,
+    30
+)
  
-
-signal_color = RED
-
-clock = pygame.time.Clock()
-
+# Place the food at a random position
+pet_food.rect.x = random.randint(
+    100,
+    SCREEN_WIDTH - pet_food.rect.width
+)
+ 
+pet_food.rect.y = random.randint(
+    0,
+    SCREEN_HEIGHT - pet_food.rect.height
+)
+ 
+all_sprites.add(pet_food)
+ 
+# Game control variables
 running = True
+food_collected = False
  
+# Create a clock to control the frame rate
+clock = pygame.time.Clock()
+ 
+ 
+# Main game loop
 while running:
  
-    
+    # Handle events
     for event in pygame.event.get():
  
-        
         if event.type == pygame.QUIT:
             running = False
  
-        
-        elif event.type == CAR_COLOR_CHANGE_EVENT:
-            car.change_color()
+    # Move the pet until the food is collected
+    if not food_collected:
  
-        
-        elif event.type == SIGNAL_CHANGE_EVENT:
-            change_signal()
+        keys = pygame.key.get_pressed()
  
-
-    all_sprites.update()
+        x_change = (
+            keys[pygame.K_RIGHT] -
+            keys[pygame.K_LEFT]
+        ) * MOVEMENT_SPEED
  
-  
-    screen.fill(ROAD)
+        y_change = (
+            keys[pygame.K_DOWN] -
+            keys[pygame.K_UP]
+        ) * MOVEMENT_SPEED
  
-  
-    for x in range(0, 600, 80):
-        pygame.draw.rect(
-            screen,
-            WHITE,
-            (x, 345, 45, 5)
+        pet.move(
+            x_change,
+            y_change
         )
  
-   
-    pygame.draw.rect(
-        screen,
-        pygame.Color("black"),
-        (275, 40, 50, 90)
+        # Detect collision between the pet and food
+        if pet.rect.colliderect(
+            pet_food.rect
+        ):
+            # Remove the collected food from the group
+            all_sprites.remove(
+                pet_food
+            )
+ 
+            food_collected = True
+ 
+    # Display the scaled background image
+    screen.blit(
+        background_image,
+        (0, 0)
     )
  
-    pygame.draw.circle(
-        screen,
-        signal_color,
-        (300, 85),
-        20
-    )
- 
-
+    # Draw the sprites
     all_sprites.draw(screen)
  
-   
+    # Display the completion message
+    if food_collected:
+ 
+        win_text = font.render(
+            "Food Collected!",
+            True,
+            pygame.Color("black")
+        )
+ 
+        # Centre the text manually
+        text_x = (
+            SCREEN_WIDTH -
+            win_text.get_width()
+        ) // 2
+ 
+        text_y = (
+            SCREEN_HEIGHT -
+            win_text.get_height()
+        ) // 2
+ 
+        screen.blit(
+            win_text,
+            (text_x, text_y)
+        )
+ 
+    # Refresh the display
     pygame.display.flip()
  
-   
+    # Limit the frame rate
     clock.tick(60)
  
-
+# Close Pygame
 pygame.quit()
