@@ -1,120 +1,82 @@
-# Wildlife Information Display
+# Mini Sprite Adventure
  
-# Import necessary library
 import pygame
  
-# Initialize Pygame
-pygame.init()
+def main():
+    pygame.init()
  
-# Set screen dimensions
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 500
+    # PART 1: Create the game screen
+    screen_width, screen_height = 500, 400
+    screen = pygame.display.set_mode((screen_width, screen_height))
+    pygame.display.set_caption("Mini Sprite Adventure")
  
-# Create the display window
-display_surface = pygame.display.set_mode(
-    (SCREEN_WIDTH, SCREEN_HEIGHT)
-)
+    # PART 2: Set sprite position and size
+    x, y = 50, 50
+    sprite_width, sprite_height = 60, 60
+    speed = 4
  
-# Set the window title
-pygame.display.set_caption(
-    "Wildlife Information Display"
-)
+    # PART 3: Define colors
+    BLACK = (0, 0, 0)
+    WHITE = (255, 255, 255)
+    BLUE = (0, 125, 255)
+    RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    YELLOW = (255, 255, 0)
  
-# Load and scale the background image
-background_image = pygame.transform.scale(
-    pygame.image.load("image(1).jpg").convert(),
-    (SCREEN_WIDTH, SCREEN_HEIGHT)
-)
+    current_color = WHITE
  
-# Load and scale the wildlife image
-wildlife_image = pygame.transform.scale(
-    pygame.image.load("image(2).jpg").convert_alpha(),
-    (220, 220)
-)
- 
-# Position the wildlife image at the centre
-wildlife_rect = wildlife_image.get_rect(
-    center=(
-        SCREEN_WIDTH // 2,
-        SCREEN_HEIGHT // 2 - 30
-    )
-)
- 
-# Create fonts for the heading and information
-heading_font = pygame.font.Font(None, 42)
-fact_font = pygame.font.Font(None, 28)
- 
-# Render the heading text
-heading_text = heading_font.render(
-    "Wildlife Spotlight: Tiger",
-    True,
-    pygame.Color("black")
-)
- 
-# Position the heading
-heading_rect = heading_text.get_rect(
-    center=(SCREEN_WIDTH // 2, 45)
-)
- 
-# Render the wildlife fact
-fact_text = fact_font.render(
-    "Tigers are powerful wild cats.",
-    True,
-    pygame.Color("black")
-)
- 
-# Position the fact text
-fact_rect = fact_text.get_rect(
-    center=(SCREEN_WIDTH // 2, 420)
-)
- 
- 
-# Main game loop
-def game_loop():
-    # Create a clock to control the frame rate
     clock = pygame.time.Clock()
- 
     running = True
  
+    # PART 4: Game loop
     while running:
-        # Check events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
  
-        # Draw the background
-        display_surface.blit(
-            background_image,
-            (0, 0)
-        )
+        # PART 5: Check which arrow keys are held down
+        pressed = pygame.key.get_pressed()
  
-        # Draw the wildlife image
-        display_surface.blit(
-            wildlife_image,
-            wildlife_rect
-        )
+        if pressed[pygame.K_LEFT]:
+            x -= speed
+        if pressed[pygame.K_RIGHT]:
+            x += speed
+        if pressed[pygame.K_UP]:
+            y -= speed
+        if pressed[pygame.K_DOWN]:
+            y += speed
  
-        # Display the heading and fact
-        display_surface.blit(
-            heading_text,
-            heading_rect
-        )
+        # PART 6: Keep the sprite inside the screen
+        x = min(max(0, x), screen_width - sprite_width)
+        y = min(max(0, y), screen_height - sprite_height)
  
-        display_surface.blit(
-            fact_text,
-            fact_rect
-        )
+        # PART 7: Change color based on sprite position
+        if x == 0:
+            current_color = BLUE
+        elif x == screen_width - sprite_width:
+            current_color = YELLOW
+        elif y == 0:
+            current_color = RED
+        elif y == screen_height - sprite_height:
+            current_color = GREEN
+        else:
+            current_color = WHITE
  
-        # Update the screen
+        # PART 8: Draw the background
+        screen.fill(BLACK)
+ 
+        # PART 9: Draw solid and outlined shapes
+        pygame.draw.circle(screen, GREEN, (420, 320), 35)
+        pygame.draw.circle(screen, BLUE, (80, 320), 35, 4)
+ 
+        # PART 10: Draw the moving sprite using pygame.Rect
+        sprite_rect = pygame.Rect(x, y, sprite_width, sprite_height)
+        pygame.draw.rect(screen, current_color, sprite_rect)
+ 
         pygame.display.flip()
+        clock.tick(60)
  
-        # Limit the game to 30 frames per second
-        clock.tick(30)
- 
-    # Close Pygame
     pygame.quit()
  
  
-# Run the application
 if __name__ == "__main__":
-    game_loop()
