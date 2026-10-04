@@ -1,196 +1,106 @@
-# Pet Food Collection Game
- 
-# Import necessary libraries
 import pygame
 import random
- 
-# Constants for easy adjustments
-SCREEN_WIDTH, SCREEN_HEIGHT = 500, 400
-MOVEMENT_SPEED = 5
-FONT_SIZE = 60
- 
 # Initialize Pygame
 pygame.init()
- 
-# Load and scale the background image
-background_image = pygame.transform.scale(
-    pygame.image.load("pet_bg.jpg"),
-    (SCREEN_WIDTH, SCREEN_HEIGHT)
-)
- 
-# Load a named system font
-font = pygame.font.SysFont(
-    "Arial",
-    FONT_SIZE
-)
- 
- 
-# Create a sprite class
+# Custom event IDs for color change events
+SPRITE_COLOR_CHANGE_EVENT = pygame.USEREVENT + 1
+BACKGROUND_COLOR_CHANGE_EVENT = pygame.USEREVENT + 2
+# Define basic colors using pygame.Color
+# Background colors
+BLUE = pygame.Color('blue')
+LIGHTBLUE = pygame.Color('lightblue')
+DARKBLUE = pygame.Color('darkblue')
+# Sprite colors
+YELLOW = pygame.Color('yellow')
+MAGENTA = pygame.Color('magenta')
+ORANGE = pygame.Color('orange')
+WHITE = pygame.Color('white')
+# Sprite class representing the moving object
 class Sprite(pygame.sprite.Sprite):
- 
-    def __init__(self, color, width, height):
-        # Call the parent Sprite constructor
+# Constructor method
+    def __init__(self, color, height, width ):
+# Call to the parent class (Sprite) constructor
         super().__init__()
- 
-        # Give the sprite an image
-        self.image = pygame.Surface(
-            [width, height]
-        )
+# Create the sprite's surface with dimensions and color
+        self.image = pygame.Surface([width, height])
         self.image.fill(color)
- 
-        # Give the sprite a rectangular position
-        self.rect = self.image.get_rect()
- 
-    # Move the sprite while keeping it inside the screen
-    def move(self, x_change, y_change):
-        self.rect.x = max(
-            min(
-                self.rect.x + x_change,
-                SCREEN_WIDTH - self.rect.width
-            ),
-            0
-        )
- 
-        self.rect.y = max(
-            min(
-                self.rect.y + y_change,
-                SCREEN_HEIGHT - self.rect.height
-            ),
-            0
-        )
- 
- 
+# Get the sprite's rect defining its position and size
+        self.rect = self.image.get_rect() #
+# Set initial velocity with random direction
+        self.velocity = [random.choice([-1, 1]), random.choice([-1, 1])]
+# Method to update the sprite's position
+    def update(self):
+# Move the sprite by its velocity
+        self.rect.move_ip(self.velocity)
+# Flag to track if the sprite hits a boundary
+        boundary_hit = False
+# Check for collision with left or right boundaries and reverse direction
+        
+        if self.rect.left <= 0 or self.rect.right >= 500:
+            self.velocity[0] = -self.velocity[0]
+        boundary_hit = True
+# Check for collision with top or bottom boundaries and reverse direction
+    
+        if self.rect.top <= 0 or self.rect.bottom >= 400:
+            self.velocity[1] = -self.velocity[1]
+            boundary_hit = True
+# If a boundary was hit, post events to change colors
+        if boundary_hit:
+            pygame.event.post(pygame.event.Event(SPRITE_COLOR_CHANGE_EVENT))
+            pygame.event.post(pygame.event.Event(BACKGROUND_COLOR_CHANGE_EVENT))
+# Method to change the sprite's color
+    def change_color(self):
+        self.image.fill(random.choice([YELLOW, MAGENTA, ORANGE, WHITE]))
+# Function to change the background color
+    def change_background_color():
+        
+        global bg_color
+bg_color = random.choice([BLUE, LIGHTBLUE, DARKBLUE])
+# Create a group to hold the sprite
+all_sprites_list = pygame.sprite.Group()
+# Instantiate the sprite
+sp1 = Sprite(WHITE, 20, 30)
+# Randomly position the sprite
+sp1.rect.x = random.randint(0, 480)
+sp1.rect.y = random.randint(0, 370)
+# Add the sprite to the group
+all_sprites_list.add(sp1)
 # Create the game window
-screen = pygame.display.set_mode(
-    (SCREEN_WIDTH, SCREEN_HEIGHT)
-)
- 
-pygame.display.set_caption(
-    "Pet Food Collection Game"
-)
- 
-# Create a group for all sprites
-all_sprites = pygame.sprite.Group()
- 
-# Create the pet sprite
-pet = Sprite(
-    pygame.Color("brown"),
-    40,
-    40
-)
- 
-pet.rect.x = 30
-pet.rect.y = 180
- 
-all_sprites.add(pet)
- 
-# Create the pet-food sprite
-pet_food = Sprite(
-    pygame.Color("orange"),
-    30,
-    30
-)
- 
-# Place the food at a random position
-pet_food.rect.x = random.randint(
-    100,
-    SCREEN_WIDTH - pet_food.rect.width
-)
- 
-pet_food.rect.y = random.randint(
-    0,
-    SCREEN_HEIGHT - pet_food.rect.height
-)
- 
-all_sprites.add(pet_food)
- 
-# Game control variables
-running = True
-food_collected = False
- 
-# Create a clock to control the frame rate
+screen = pygame.display.set_mode((500, 400))
+# Set the window title
+pygame.display.set_caption("Boundary Sprite")
+# Set the initial background color
+bg_color = BLUE
+# Apply the background color
+screen.fill(bg_color)
+# Game loop control flag
+exit = False
+# Create a clock object to control frame rate
 clock = pygame.time.Clock()
- 
- 
 # Main game loop
-while running:
- 
-    # Handle events
-    for event in pygame.event.get():
- 
-        if event.type == pygame.QUIT:
-            running = False
- 
-    # Move the pet until the food is collected
-    if not food_collected:
- 
-        keys = pygame.key.get_pressed()
- 
-        x_change = (
-            keys[pygame.K_RIGHT] -
-            keys[pygame.K_LEFT]
-        ) * MOVEMENT_SPEED
- 
-        y_change = (
-            keys[pygame.K_DOWN] -
-            keys[pygame.K_UP]
-        ) * MOVEMENT_SPEED
- 
-        pet.move(
-            x_change,
-            y_change
-        )
- 
-        # Detect collision between the pet and food
-        if pet.rect.colliderect(
-            pet_food.rect
-        ):
-            # Remove the collected food from the group
-            all_sprites.remove(
-                pet_food
-            )
- 
-            food_collected = True
- 
-    # Display the scaled background image
-    screen.blit(
-        background_image,
-        (0, 0)
-    )
- 
-    # Draw the sprites
-    all_sprites.draw(screen)
- 
-    # Display the completion message
-    if food_collected:
- 
-        win_text = font.render(
-            "Food Collected!",
-            True,
-            pygame.Color("black")
-        )
- 
-        # Centre the text manually
-        text_x = (
-            SCREEN_WIDTH -
-            win_text.get_width()
-        ) // 2
- 
-        text_y = (
-            SCREEN_HEIGHT -
-            win_text.get_height()
-        ) // 2
- 
-        screen.blit(
-            win_text,
-            (text_x, text_y)
-        )
- 
-    # Refresh the display
-    pygame.display.flip()
- 
-    # Limit the frame rate
-    clock.tick(60)
- 
-# Close Pygame
+while not exit:
+# Event handling loop
+for event in pygame.event.get():
+# If the window's close button is clicked, exit the game
+if event.type == pygame.QUIT:
+exit = True
+# If the sprite color change event is triggered, change the
+sprite's color
+elif event.type == SPRITE_COLOR_CHANGE_EVENT:
+sp1.change_color()
+# If the background color change event is triggered, change the
+background color
+elif event.type == BACKGROUND_COLOR_CHANGE_EVENT:
+change_background_color()
+# Update all sprites
+all_sprites_list.update()
+# Fill the screen with the current background color
+screen.fill(bg_color)
+# Draw all sprites to the screen
+all_sprites_list.draw(screen)
+# Refresh the display
+pygame.display.flip()
+# Limit the frame rate to 240 fps
+clock.tick(240)
+# Uninitialize all pygame modules and close the window
 pygame.quit()
