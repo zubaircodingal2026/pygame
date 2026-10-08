@@ -1,35 +1,68 @@
-#import necessarie libaries
+# Workshop Participant Greeting
+# Import necessary libraries
 from tkinter import *
 from datetime import date
-
-#create window
+ 
+# PART 1: Create the main window
 root = Tk()
-root.title('Getting start with Widgets')
-root.geometry('400x300')
-
-#add widgets
-#add label
-lbl = Label(text="hey there!",fg="white",bg="#072F5F",height=1,width=300)
-
-#add label for getting name as input from user
-#using enter widget  to crate a text  box for user to enter detail
-name_lbl = Label(text="full name",bg="#3895D3")
-Name_entry = Entry()
-
-#function to display a massage
-def display() :
-    #read input give by user
-    name = Name_entry.get()
-    #Declaring a global variable
-    #to make it accessible anymore in the program
-    global Message
-    message = "welcome to application! \ntodays date is :"
-    greet = "hello"+name+"\n"
-    #display detail in a text box
-    #specific where to add the detail inside the text box
-    text_box.insert(END, greet)
+root.title("Workshop Participant Greeting")
+root.geometry("400x300")
+ 
+# PART 2: Create the heading label
+heading = Label(
+    text="Workshop Welcome Desk",
+    fg="white",
+    bg="#072F5F",
+    height=1,
+    width=300
+)
+ 
+# PART 3: Create a label and Entry widget
+name_label = Label(
+    text="Participant Name",
+    bg="#3895D3"
+)
+name_entry = Entry()
+ 
+# PART 4: Create the display function
+def display_welcome():
+    # Read the participant's name from the Entry widget
+    name = name_entry.get()
+ 
+    # Clear the previous message
+    text_box.delete(1.0, END)
+ 
+    # Create the multi-line welcome message
+    greeting = "Hello " + name + "!\n"
+    message = "Welcome to the workshop.\n"
+    workshop_date = "Date: " + str(date.today())
+ 
+    # Insert the message into the Text widget
+    text_box.insert(END, greeting)
     text_box.insert(END, message)
-    text_box.insert(END, date.today())
-    
-#add a text widget to display information/massage
-text_box = Text(height=3)
+    text_box.insert(END, workshop_date)
+ 
+# PART 5: Create the Text widget
+text_box = Text(
+    height=4,
+    width=40
+)
+ 
+# PART 6: Create the button and connect its command
+welcome_button = Button(
+    text="Check In",
+    command=display_welcome,
+    height=1,
+    bg="#1261A0",
+    fg="white"
+)
+ 
+# PART 7: Arrange the widgets
+heading.pack()
+name_label.pack(pady=10)
+name_entry.pack()
+welcome_button.pack(pady=10)
+text_box.pack()
+ 
+# PART 8: Start the Tkinter event loop
+root.mainloop()
