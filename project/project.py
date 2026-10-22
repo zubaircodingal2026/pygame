@@ -1,153 +1,123 @@
 import pygame
-import random
+import sys
 
-# Initialize pygame
 pygame.init()
 
-# Screen settings
-WIDTH = 800
-HEIGHT = 600
+# -----------------------
+# Window
+# -----------------------
+WIDTH, HEIGHT = 900, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Space Invader")
+pygame.display.set_caption("Grandma's Letter Writer")
 
-# Colors
-BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-YELLOW = (255, 255, 0)
+BLACK = (0, 0, 0)
+GRAY = (220, 220, 220)
+LIGHTBLUE = (180, 220, 255)
 
-# Clock and font
+font = pygame.font.SysFont("arial", 28)
+button_font = pygame.font.SysFont("arial", 24)
+
+text = ""
+cursor = True
+cursor_timer = 0
+
+# Text box
+textbox = pygame.Rect(30, 30, 840, 470)
+
+# Buttons
+save_button = pygame.Rect(200, 530, 180, 45)
+clear_button = pygame.Rect(520, 530, 180, 45)
+
 clock = pygame.time.Clock()
-font = pygame.font.SysFont("Arial", 30)
 
-# Player settings
-player_width = 60
-player_height = 20
-player_x = WIDTH // 2 - player_width // 2
-player_y = HEIGHT - 60
-player_speed = 7
-
-# Bullet settings
-bullet_width = 5
-bullet_height = 15
-bullet_x = 0
-bullet_y = player_y
-bullet_speed = 10
-bullet_active = False
-
-# Enemy settings
-enemy_width = 50
-enemy_height = 30
-enemy_speed = 4
-
-enemy_x = 100
-enemy_y = 50
-
-enemy2_x = 220
-enemy2_y = 100
-
-enemy3_x = 340
-enemy3_y = 50
-
-enemy4_x = 460
-enemy4_y = 100
-
-enemy5_x = 580
-enemy5_y = 50
-# Score
-score = 0
-
-# Game loop
 running = True
 
 while running:
 
     clock.tick(60)
 
-    screen.fill(BLACK)
+    cursor_timer += 1
+    if cursor_timer >= 30:
+        cursor = not cursor
+        cursor_timer = 0
 
     for event in pygame.event.get():
 
-              if event.type == pygame.KEYDOWN:
+        if event.type == pygame.QUIT:
+            running = False
 
-                if event.key == pygame.K_LEFT:
-                   player_x -= player_speed
+        elif event.type == pygame.KEYDOWN:
 
-                elif event.key == pygame.K_RIGHT:
-                    player_x += player_speed
+            if event.key == pygame.K_BACKSPACE:
+                text = text[:-1]
 
-                elif event.key == pygame.K_SPACE and not bullet_active:
-                    bullet_active = True
-                    bullet_x = player_x + player_width // 2 - bullet_width // 2
-                    bullet_y = player_y
+            elif event.key == pygame.K_RETURN:
+                text += "\n"
 
-    # Keep player inside the screen
-    if player_x < 0:
-        player_x = 0
+            else:
+                text += event.unicode
 
-    if player_x > WIDTH - player_width:
-        player_x = WIDTH - player_width
+        elif event.type == pygame.MOUSEBUTTONDOWN:
 
-    # Move enemies
-    enemy_x += enemy_speed
-    enemy2_x += enemy_speed
-    enemy3_x += enemy_speed
-    enemy4_x += enemy_speed
-    enemy5_x += enemy_speed
+            if save_button.collidepoint(event.pos):
+                with open("letter.txt", "w", encoding="utf-8") as f:
+                    f.write(text)
+                print("Saved!")
 
-    if enemy_x <= 0 or enemy_x >= WIDTH - enemy_width:
-        enemy_speed *= -1
-        enemy_y += 20
-        enemy2_y += 20
-        enemy3_y += 20
-        enemy4_y += 20
-        enemy5_y += 20
+            elif clear_button.collidepoint(event.pos):
+                text = ""
 
-    # Move bullet
-    if bullet_active:
-        bullet_y -= bullet_speed
+    screen.fill(GRAY)
 
-        if bullet_y < 0:
-            bullet_active = False
+    # Text area
+    pygame.draw.rect(screen, WHITE, textbox)
+    pygame.draw.rect(screen, BLACK, textbox, 2)
 
-    # Collision with first enemy
-    if bullet_active:
-        if (enemy_x < bullet_x < enemy_x + enemy_width and
-            enemy_y < bullet_y < enemy_y + enemy_height):
+    # Draw wrapped text
+    x = textbox.x + 10
+    y = textbox.y + 10
 
-            bullet_active = False
-            score += 1
+    lines = text.split("\n")
 
-            enemy_x = random.randint(0, WIDTH - enemy_width)
-            enemy_y = 50
+    for line in lines:
+        words = line.split(" ")
+        current = ""
 
-    # Draw player
-    pygame.draw.rect(
-        screen,
-        GREEN,
-        (player_x, player_y, player_width, player_height)
-    )
+        for word in words:
+            test = current + word + " "
 
-    # Draw enemies
-    pygame.draw.rect(screen, RED, (enemy_x, enemy_y, enemy_width, enemy_height))
-    pygame.draw.rect(screen, RED, (enemy2_x, enemy2_y, enemy_width, enemy_height))
-    pygame.draw.rect(screen, RED, (enemy3_x, enemy3_y, enemy_width, enemy_height))
-    pygame.draw.rect(screen, RED, (enemy4_x, enemy4_y, enemy_width, enemy_height))
-    pygame.draw.rect(screen, RED, (enemy5_x, enemy5_y, enemy_width, enemy_height))
+            if font.size(test)[0] < textbox.width - 20:
+                current = test
+            else:
+                img = font.render(current, True, BLACK)
+                screen.blit(img, (x, y))
+                y += 32
+                current = word + " "
 
-    # Draw bullet
-    if bullet_active:
-        pygame.draw.rect(
-            screen,
-            YELLOW,
-            (bullet_x, bullet_y, bullet_width, bullet_height)
-        )
+        img = font.render(current, True, BLACK)
+        screen.blit(img, (x, y))
+        y += 32
 
-    # Draw score
-    score_text = font.render("Score: " + str(score), True, WHITE)
-    screen.blit(score_text, (10, 10))
+    # Cursor
+    if cursor:
+        pygame.draw.line(screen, BLACK, (x, y), (x, y + 25), 2)
 
-    pygame.display.update()
+    # Save Button
+    pygame.draw.rect(screen, LIGHTBLUE, save_button)
+    pygame.draw.rect(screen, BLACK, save_button, 2)
+    txt = button_font.render("Save", True, BLACK)
+    screen.blit(txt, (save_button.centerx - txt.get_width() // 2,
+                      save_button.centery - txt.get_height() // 2))
+
+    # Clear Button
+    pygame.draw.rect(screen, LIGHTBLUE, clear_button)
+    pygame.draw.rect(screen, BLACK, clear_button, 2)
+    txt = button_font.render("Clear", True, BLACK)
+    screen.blit(txt, (clear_button.centerx - txt.get_width() // 2,
+                      clear_button.centery - txt.get_height() // 2))
+
+    pygame.display.flip()
 
 pygame.quit()
+sys.exit()
