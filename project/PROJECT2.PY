@@ -1,68 +1,143 @@
-# Workshop Participant Greeting
+# Reading Schedule Planner
 # Import necessary libraries
 from tkinter import *
-from datetime import date
+from tkinter import messagebox
  
-# PART 1: Create the main window
+# PART 1: Set up the main window
 root = Tk()
-root.title("Workshop Participant Greeting")
-root.geometry("400x300")
+root.title("Reading Schedule Planner")
+root.configure(bg="light blue")
+root.geometry("500x300")
  
-# PART 2: Create the heading label
+# Add heading and instruction labels
 heading = Label(
-    text="Workshop Welcome Desk",
-    fg="white",
-    bg="#072F5F",
-    height=1,
-    width=300
+    root,
+    text="Reading Schedule Planner",
+    font=("Arial", 18, "bold"),
+    bg="light blue"
 )
+heading.pack(pady=50)
  
-# PART 3: Create a label and Entry widget
-name_label = Label(
-    text="Participant Name",
-    bg="#3895D3"
+instruction = Label(
+    root,
+    text="Create a simple plan to complete your book.",
+    bg="light blue"
 )
-name_entry = Entry()
+instruction.pack(pady=10)
  
-# PART 4: Create the display function
-def display_welcome():
-    # Read the participant's name from the Entry widget
-    name = name_entry.get()
+# PART 2: Open the Toplevel window
+def topwin():
+    # Create and configure the Toplevel window
+    top = Toplevel(root)
+    top.title("Create Reading Plan")
+    top.configure(bg="light grey")
+    top.geometry("500x350+50+50")
  
-    # Clear the previous message
-    text_box.delete(1.0, END)
+    # Add labels and input fields
+    pages_label = Label(
+        top,
+        text="Enter total number of pages:",
+        bg="light grey"
+    )
+    pages_entry = Entry(top)
  
-    # Create the multi-line welcome message
-    greeting = "Hello " + name + "!\n"
-    message = "Welcome to the workshop.\n"
-    workshop_date = "Date: " + str(date.today())
+    daily_label = Label(
+        top,
+        text="Enter pages you can read each day:",
+        bg="light grey"
+    )
+    daily_entry = Entry(top)
  
-    # Insert the message into the Text widget
-    text_box.insert(END, greeting)
-    text_box.insert(END, message)
-    text_box.insert(END, workshop_date)
+    result_label = Label(
+        top,
+        text="Your Reading Plan",
+        font=("Arial", 14, "bold"),
+        bg="light grey"
+    )
  
-# PART 5: Create the Text widget
-text_box = Text(
-    height=4,
-    width=40
-)
+    days_label = Label(
+        top,
+        text="Complete reading days:",
+        bg="light grey"
+    )
  
-# PART 6: Create the button and connect its command
-welcome_button = Button(
-    text="Check In",
-    command=display_welcome,
-    height=1,
+    remaining_label = Label(
+        top,
+        text="Pages remaining:",
+        bg="light grey"
+    )
+ 
+    days_entry = Entry(top)
+    remaining_entry = Entry(top)
+ 
+    # PART 3: Define a function inside topwin()
+    def calculate_plan():
+        try:
+            # Read and convert the input values
+            total_pages = int(pages_entry.get())
+            pages_per_day = int(daily_entry.get())
+ 
+            # Check that both values are greater than zero
+            if total_pages <= 0 or pages_per_day <= 0:
+                messagebox.showerror(
+                    "Invalid Input",
+                    "Please enter numbers greater than zero."
+                )
+                return
+ 
+            # PART 4: Use floor division and modulo
+            complete_days = total_pages // pages_per_day
+            remaining_pages = total_pages % pages_per_day
+ 
+            # Clear previous results
+            days_entry.delete(0, END)
+            remaining_entry.delete(0, END)
+ 
+            # Display the results
+            days_entry.insert(END, str(complete_days))
+            remaining_entry.insert(END, str(remaining_pages))
+ 
+        # PART 5: Handle invalid input
+        except ValueError:
+            messagebox.showerror(
+                "Invalid Input",
+                "Please enter valid whole numbers."
+            )
+ 
+    # Add button connected to the nested function
+    calculate_button = Button(
+        top,
+        text="Create Plan",
+        command=calculate_plan,
+        bg="#1261A0",
+        fg="white"
+    )
+ 
+    # Position widgets in the Toplevel window
+    pages_label.place(x=80, y=40)
+    pages_entry.place(x=280, y=40)
+ 
+    daily_label.place(x=80, y=90)
+    daily_entry.place(x=280, y=90)
+ 
+    calculate_button.place(x=205, y=135)
+    result_label.place(x=175, y=185)
+ 
+    days_label.place(x=80, y=235)
+    days_entry.place(x=280, y=235)
+ 
+    remaining_label.place(x=80, y=275)
+    remaining_entry.place(x=280, y=275)
+ 
+# Add button to open the Toplevel window
+start_button = Button(
+    root,
+    text="Create My Reading Plan",
+    command=topwin,
     bg="#1261A0",
     fg="white"
 )
+start_button.pack(pady=15)
  
-# PART 7: Arrange the widgets
-heading.pack()
-name_label.pack(pady=10)
-name_entry.pack()
-welcome_button.pack(pady=10)
-text_box.pack()
- 
-# PART 8: Start the Tkinter event loop
+# Start the main Tkinter event loop
 root.mainloop()
